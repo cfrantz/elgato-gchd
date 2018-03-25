@@ -22,6 +22,7 @@ class Fifo {
 		~Fifo();
 
 	private:
+        int reopen();
 		int fd_;
 		std::string output_;
 };

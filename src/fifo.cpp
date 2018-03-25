@@ -50,12 +50,28 @@ void Fifo::disable() {
 	}
 }
 
+int Fifo::reopen() {
+    fd_ = open(output_.c_str(), O_WRONLY | O_NONBLOCK);
+    if (fd_ != -1) {
+        int flags = fcntl(fd_, F_GETFL);
+        flags &= ~O_NONBLOCK;
+        fcntl(fd_, F_SETFL, flags);
+    }
+    return fd_;
+}
+
 void Fifo::output(std::vector<unsigned char> *buffer) {
 	if (fd_ == -1) {
-		return;
+        if (reopen() == -1) {
+		    return;
+        }
 	}
 
-	write(fd_, buffer->data(), buffer->size());
+	if (write(fd_, buffer->data(), buffer->size()) == -1) {
+        perror("fifo write");
+        close(fd_);
+        fd_ = -1;
+    }
 }
 
 Fifo::Fifo() {
